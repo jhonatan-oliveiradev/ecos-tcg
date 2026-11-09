@@ -9,3 +9,6 @@ playwright-report/
 .vercel/
 
 /docs/rejected-art/
+
+.next/
+next-env.d.ts

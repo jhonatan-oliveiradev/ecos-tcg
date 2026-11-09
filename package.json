@@ -4,32 +4,33 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0",
-    "build": "tsc -b && vite build",
-    "typecheck": "tsc --noEmit",
+    "dev": "next dev --hostname 0.0.0.0",
+    "build": "next build",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "lint": "eslint .",
     "test:e2e": "playwright test",
-    "format": "prettier --write src docs README.md *.ts *.json *.js index.html",
-    "format:check": "prettier --check src docs README.md *.ts *.json *.js index.html"
+    "format": "prettier --write src docs README.md *.ts *.json *.js",
+    "format:check": "prettier --check src docs README.md *.ts *.json *.js",
+    "start": "next start --hostname 0.0.0.0"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "next": "16.4.5"
   },
   "devDependencies": {
     "@playwright/test": "latest",
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
-    "@vitejs/plugin-react": "latest",
     "eslint": "^9.0.0",
     "prettier": "^3.9.10",
     "typescript": "^5.9.0",
     "typescript-eslint": "latest",
-    "vite": "^8.0.0",
-    "vitest": "latest"
+    "vitest": "latest",
+    "eslint-config-next": "16.4.5"
   },
   "engines": {
     "node": "24.x"
