@@ -35,17 +35,19 @@ export function DuelScreen({
   onExit,
   onGuide,
   tutorial = false,
+  defaultHolo = false,
 }: {
   view: PlayerView;
   onAction: (a: Action) => void;
   onExit: () => void;
   onGuide: () => void;
   tutorial?: boolean;
+  defaultHolo?: boolean;
 }) {
   const [selectedId, setSelected] = useState<string | null>(null);
   const [inspect, setInspect] = useState<string | null>(null);
   const [inspectOwner, setInspectOwner] = useState<PlayerId | null>(null);
-  const [holo, setHolo] = useState(false);
+  const [holo, setHolo] = useState(defaultHolo);
   const [history, setHistory] = useState(false);
   const [swaps, setSwaps] = useState<string[]>([]);
   const selected = v.self.hand.some((c) => c.id === selectedId)

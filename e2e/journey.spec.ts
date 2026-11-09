@@ -19,7 +19,7 @@ test("inspects a real card and toggles foil without changing rules", async ({
   page,
 }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "OS ECOS 20", exact: true }).click();
+  await page.getByRole("link", { name: "Os Ecos 20", exact: true }).click();
   await page
     .getByRole("button", {
       name: "Lontra Condutora, custo 2, ataque 2, vida 3",
@@ -35,7 +35,7 @@ test("inspects a real card and toggles foil without changing rules", async ({
 test("starts tutorial duel, keeps hand, and exits cleanly", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/jogar");
   await page
     .getByRole("button", { name: "Primeira vez? Aprenda jogando", exact: true })
     .click();
@@ -75,11 +75,47 @@ test("hydrates the Next.js page and loads the character study", async ({
     "content",
     /Crie vínculos/,
   );
-  await page.getByRole("button", { name: "ATELIÊ", exact: true }).click();
+  await page.getByRole("link", { name: "Ateliê", exact: true }).click();
   const study = page.getByRole("img", { name: /Estudo de Brotoco/ });
   await expect(study).toBeVisible();
   await expect
     .poll(() => study.evaluate((img: HTMLImageElement) => img.naturalWidth))
     .toBeGreaterThan(0);
   expect(errors).toEqual([]);
+});
+
+test("keeps guest preferences across hub routes and reloads", async ({
+  page,
+}) => {
+  await page.goto("/ajustes");
+  await page
+    .getByLabel("Nome do vinculador", { exact: true })
+    .fill("Iara do Jardim");
+  await page.getByRole("button", { name: "Salvar nome", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("Iara do Jardim");
+  await page
+    .getByRole("switch", { name: "Reduzir animações", exact: true })
+    .click();
+  await expect(page.locator(".ecos-app")).toHaveAttribute(
+    "data-motion",
+    "reduced",
+  );
+  await page.getByRole("link", { name: "Loja", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Aplicar acabamento", exact: true })
+    .click();
+  await page.getByRole("link", { name: "Decks", exact: true }).click();
+  await page.getByRole("button", { name: /Distrito Aurora/ }).click();
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: /Distrito Aurora/ }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".guest-chip")).toContainText("Iara do Jardim");
+  await page.getByRole("link", { name: "Os Ecos 20", exact: true }).click();
+  await page.getByRole("searchbox", { name: "Buscar Ecos" }).fill("pulso");
+  await expect(page.getByRole("status")).toHaveText("1 Ecos encontrados");
+  await page
+    .getByRole("button", { name: "Pulso, custo 2", exact: true })
+    .click();
+  await expect(page.getByRole("dialog").locator(".holo-foil")).toHaveCount(1);
 });

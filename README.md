@@ -57,3 +57,9 @@ Importe `jhonatan-oliveiradev/ecos-tcg` com a raiz do repositório, framework Ne
 O layout e a página inicial usam Server Components. `src/app/app.tsx` delimita o cliente interativo do jogo; o motor em `src/game`, conteúdo em `src/content` e IA em `src/ai` continuam independentes do Next.js. Vitest mantém sua configuração própria; Vite é apenas dependência transitiva do runner de testes.
 
 A migração não adiciona contas, banco ou multiplayer. A plataforma poderá usar APIs do Next.js para conta, coleção e decks. Partidas online deverão validar comandos no servidor, manter informação oculta e permitir reconexão; o estado no navegador permanece restrito ao modo local até esse marco.
+
+## Central do jogador (v0.2)
+
+A estação agora organiza o jogo em rotas: `/jogar`, `/ecos`, `/decks`, `/loja`, `/perfil`, `/atelie` e `/ajustes`. O catálogo permite busca e filtros; os decks mostram lista, curva e estratégia; a loja aplica dois acabamentos gratuitos. Nome, deck padrão, acabamento, movimento e os últimos 50 resultados reais ficam neste navegador, sem conta ou sincronização. Vitórias e marcos locais não concedem moeda ou recompensas comerciais.
+
+Consulte `docs/browser-game-structure.md` para responsabilidades e próximos marcos. O catálogo continua público, e ainda não representa uma coleção com propriedade individual das cartas. O construtor de decks e a loja com transações pertencem às próximas fases.

@@ -2,6 +2,22 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { HubShell } from "../ui/hub/hub-shell";
+import type { HubScreen } from "../ui/hub/navigation";
+import {
+  StationScreen,
+  DecksScreen,
+  StoreScreen,
+  ProfileScreen,
+  SettingsScreen,
+} from "../ui/hub/hub-screens";
+import {
+  useGuestProfile,
+  updateProfile,
+  recordLocalMatch,
+} from "./use-guest-profile";
 import { useDialogFocus } from "../ui/use-dialog-focus";
 import {
   ArrowUpRight,
@@ -36,14 +52,35 @@ function Session({
   onExit,
   onGuide,
   tutorial,
+  deck,
+  recordId,
+  defaultHolo,
 }: {
   controller: MatchController;
   onExit: () => void;
   onGuide: () => void;
   tutorial: boolean;
+  deck: DeckId;
+  recordId: string;
+  defaultHolo: boolean;
 }) {
   const view = useMatch(controller);
   const [exitConfirm, setExitConfirm] = useState(false);
+  useEffect(() => {
+    if (!view.result) return;
+    recordLocalMatch({
+      id: recordId,
+      deck,
+      outcome:
+        view.result === "draw"
+          ? "draw"
+          : view.result === view.playerId
+            ? "win"
+            : "loss",
+      rounds: view.round,
+      date: new Date().toISOString(),
+    });
+  }, [view.result, view.playerId, view.round, deck, recordId]);
   if (view.result) return <ResultScreen view={view} onExit={onExit} />;
   return (
     <>
@@ -53,6 +90,7 @@ function Session({
         onExit={() => setExitConfirm(true)}
         onGuide={onGuide}
         tutorial={tutorial}
+        defaultHolo={defaultHolo}
       />
       {exitConfirm && !view.result && (
         <div className="dialog-backdrop">
@@ -70,7 +108,8 @@ function Session({
             </p>
             <div className="dialog-buttons">
               <button
-                className="secondary"
+                className="secondary dialog-close-action"
+                data-dialog-dismiss
                 onClick={() => setExitConfirm(false)}
               >
                 Continuar duelo
@@ -85,20 +124,36 @@ function Session({
     </>
   );
 }
-export default function App() {
+export default function App({ screen = "station" }: { screen?: HubScreen }) {
   useDialogFocus();
-  const [deck, setDeck] = useState<DeckId>("jardins");
-  const [screen, setScreen] = useState<"home" | "collection" | "atelier">(
-    "home",
-  );
+  const router = useRouter();
+  const profile = useGuestProfile();
+  const deck = profile.deck;
+  const setDeck = (deck: DeckId) => updateProfile({ deck });
+  const [recordId, setRecordId] = useState("");
   const [guide, setGuide] = useState(false);
   const [controller, setController] = useState<MatchController | null>(null);
   const [tutorial, setTutorial] = useState(false);
   const [filter, setFilter] = useState<
     "all" | "jardins" | "aurora" | "neutral"
   >("all");
-  const [holo, setHolo] = useState(false);
+  const [holoOverride, setHolo] = useState<boolean | null>(null);
+  const holo = holoOverride ?? profile.finish === "holo";
+  const [query, setQuery] = useState("");
   const [inspected, setInspected] = useState<string | null>(null);
+  const normalizeSearch = (text: string) =>
+    text
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+  const visibleCards = Object.values(CARDS).filter(
+    (card) =>
+      (filter === "all" || card.region === filter) &&
+      normalizeSearch(`${card.name} ${card.text}`).includes(
+        normalizeSearch(query),
+      ),
+  );
   useEffect(() => () => controller?.dispose(), [controller]);
   useEffect(() => {
     const handle = (e: KeyboardEvent) => {
@@ -112,6 +167,7 @@ export default function App() {
   }, []);
   function start(withTutorial = false) {
     setTutorial(withTutorial);
+    setRecordId(crypto.randomUUID());
     const seed = Math.floor(Math.random() * 1e8) + 1;
     setController(
       createMatchController({
@@ -124,234 +180,259 @@ export default function App() {
   function leave() {
     controller?.dispose();
     setController(null);
-    setScreen("home");
+    router.push("/");
   }
   return (
-    <>
+    <div
+      className="ecos-app"
+      data-motion={profile.reducedMotion ? "reduced" : "full"}
+    >
       {controller ? (
         <Session
           controller={controller}
           onExit={leave}
           onGuide={() => setGuide(true)}
           tutorial={tutorial}
+          deck={deck}
+          recordId={recordId}
+          defaultHolo={profile.finish === "holo"}
         />
       ) : (
-        <div className={`home ${screen === "home" ? "" : "inner-page"}`}>
-          <div className="home-scenery" />
-          <div className="home-shade" />
-          <header className="home-top">
-            <button
-              className="brand-button"
-              onClick={() => setScreen("home")}
-              aria-label="Ecos início"
-            >
-              <span className="brand-symbol">✳</span>
-              <span className="brand-caption">
-                ECOS<small>FÁBULA NEON</small>
-              </span>
-            </button>
-            <nav aria-label="Menu principal">
-              <button
-                className={screen === "home" ? "current" : ""}
-                onClick={() => setScreen("home")}
-              >
-                A ESTAÇÃO
-              </button>
-              <button
-                className={screen === "collection" ? "current" : ""}
-                onClick={() => setScreen("collection")}
-              >
-                OS ECOS <span>20</span>
-              </button>
-              <button
-                className={screen === "atelier" ? "current" : ""}
-                onClick={() => setScreen("atelier")}
-              >
-                ATELIÊ
-              </button>
-            </nav>
-            <button className="guide-button" onClick={() => setGuide(true)}>
-              <BookOpen size={17} /> Como jogar
-            </button>
-          </header>
-          {screen === "home" ? (
-            <>
-              <main className="home-main">
-                <div className="home-hero">
-                  <div className="eyebrow">
-                    <span className="status-dot" /> UM NOVO MUNDO CRIA RAÍZES
-                  </div>
-                  <h1>
-                    O futuro
-                    <br />
-                    tem <em>raízes.</em>
-                  </h1>
-                  <p>
-                    Entre o concreto e o impossível,
-                    <br />
-                    um vínculo pode mudar tudo.
-                  </p>
-                  <div className="hero-line">
-                    <span>01 — ESTAÇÃO-JARDIM</span>
-                    <span>23° S · 46° O</span>
-                  </div>
-                </div>
-                <div className="journey-panel">
-                  <div className="panel-header">
-                    <div>
-                      <span className="eyebrow">SEU PRIMEIRO VÍNCULO</span>
-                      <h2>Escolha com quem começar.</h2>
+        <HubShell
+          screen={screen}
+          profile={profile}
+          onGuide={() => setGuide(true)}
+        >
+          <div
+            className={`home ${screen === "play" ? "play-page" : "inner-page"}`}
+          >
+            <div className="home-scenery" />
+            <div className="home-shade" />
+            {screen === "station" ? (
+              <StationScreen profile={profile} onGuide={() => setGuide(true)} />
+            ) : screen === "play" ? (
+              <>
+                <main className="home-main">
+                  <div className="home-hero">
+                    <div className="eyebrow">
+                      <span className="status-dot" /> UM NOVO MUNDO CRIA RAÍZES
                     </div>
-                    <span className="chapter-number">01</span>
+                    <h1>
+                      O futuro
+                      <br />
+                      tem <em>raízes.</em>
+                    </h1>
+                    <p>
+                      Entre o concreto e o impossível,
+                      <br />
+                      um vínculo pode mudar tudo.
+                    </p>
+                    <div className="hero-line">
+                      <span>01 — ESTAÇÃO-JARDIM</span>
+                      <span>23° S · 46° O</span>
+                    </div>
                   </div>
-                  <div className="deck-options">
-                    {(["jardins", "aurora"] as const).map((id) => (
+                  <div className="journey-panel">
+                    <div className="panel-header">
+                      <div>
+                        <span className="eyebrow">SEU PRIMEIRO VÍNCULO</span>
+                        <h2>Escolha com quem começar.</h2>
+                      </div>
+                      <span className="chapter-number">01</span>
+                    </div>
+                    <div className="deck-options">
+                      {(["jardins", "aurora"] as const).map((id) => (
+                        <button
+                          key={id}
+                          className={`deck-option ${id} ${deck === id ? "chosen" : ""}`}
+                          onClick={() => setDeck(id)}
+                          aria-pressed={deck === id}
+                        >
+                          <div className="deck-icon">
+                            {id === "jardins" ? (
+                              <Leaf size={23} />
+                            ) : (
+                              <Radio size={23} />
+                            )}
+                          </div>
+                          <div>
+                            <strong>{DECKS[id].name}</strong>
+                            <small>{DECKS[id].subtitle}</small>
+                          </div>
+                          <span className="selection-dot">
+                            {deck === id && <Check size={12} />}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="companion-preview">
+                      <div className="preview-portrait">
+                        {deck === "jardins" ? (
+                          <div className="brotoco-study" />
+                        ) : (
+                          <Radio size={46} strokeWidth={1} />
+                        )}
+                      </div>
+                      <div>
+                        <span className="eyebrow">SUA COMPANHEIRA</span>
+                        <h3>
+                          {COMPANIONS[DECKS[deck].companion].name}
+                          <span>◇ INICIAL</span>
+                        </h3>
+                        <p>
+                          {deck === "jardins"
+                            ? "Cada rachadura guarda a chance de florescer."
+                            : "Toda cidade tem uma frequência. Encontre a sua."}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      className="primary large full"
+                      onClick={() => start(false)}
+                    >
+                      Iniciar duelo <ArrowUpRight size={20} />
+                    </button>
+                    <button
+                      className="tutorial-link"
+                      onClick={() => start(true)}
+                    >
+                      <BookOpen size={14} /> Primeira vez? Aprenda jogando{" "}
+                      <ArrowRight size={14} />
+                    </button>
+                    <div className="panel-foot">
+                      <span className="status-dot" /> PROTÓTIPO LOCAL{" "}
+                      <span>1V1 CONTRA IA</span>
+                    </div>
+                  </div>
+                </main>
+                <footer className="home-footer">
+                  <div className="world-note">
+                    <span>⌁</span>
+                    <p>
+                      As cidades não desapareceram.
+                      <br />
+                      <strong>Aprenderam a respirar de novo.</strong>
+                    </p>
+                  </div>
+                  <div className="build-note">
+                    EM DESENVOLVIMENTO · V0.1
+                    <br />
+                    <span>Um universo original em construção.</span>
+                  </div>
+                </footer>
+              </>
+            ) : screen === "collection" ? (
+              <main className="collection-page">
+                <Link className="text-button" href="/">
+                  <ArrowLeft size={15} /> Voltar à estação
+                </Link>
+                <div className="eyebrow">FRAGMENTOS DE UM MUNDO VIVO</div>
+                <h1>
+                  Conheça os <em>Ecos.</em>
+                </h1>
+                <p>
+                  O conjunto inicial de teste. As ilustrações das cartas estão
+                  em revisão de direção de arte.
+                </p>
+                <label className="catalog-search">
+                  Buscar Ecos
+                  <input
+                    type="search"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Nome ou habilidade da carta"
+                  />
+                </label>
+                <div className="filter-tabs">
+                  {(["all", "neutral", "jardins", "aurora"] as const).map(
+                    (f) => (
                       <button
-                        key={id}
-                        className={`deck-option ${id} ${deck === id ? "chosen" : ""}`}
-                        onClick={() => setDeck(id)}
-                        aria-pressed={deck === id}
+                        key={f}
+                        className={filter === f ? "active" : ""}
+                        onClick={() => setFilter(f)}
                       >
-                        <div className="deck-icon">
-                          {id === "jardins" ? (
-                            <Leaf size={23} />
-                          ) : (
-                            <Radio size={23} />
-                          )}
-                        </div>
-                        <div>
-                          <strong>{DECKS[id].name}</strong>
-                          <small>{DECKS[id].subtitle}</small>
-                        </div>
-                        <span className="selection-dot">
-                          {deck === id && <Check size={12} />}
-                        </span>
+                        {f === "all"
+                          ? "Todos"
+                          : f === "neutral"
+                            ? "Neutros"
+                            : DECKS[f].name}
                       </button>
-                    ))}
-                  </div>
-                  <div className="companion-preview">
-                    <div className="preview-portrait">
-                      {deck === "jardins" ? (
-                        <div className="brotoco-study" />
-                      ) : (
-                        <Radio size={46} strokeWidth={1} />
-                      )}
-                    </div>
-                    <div>
-                      <span className="eyebrow">SUA COMPANHEIRA</span>
-                      <h3>
-                        {COMPANIONS[DECKS[deck].companion].name}
-                        <span>◇ INICIAL</span>
-                      </h3>
-                      <p>
-                        {deck === "jardins"
-                          ? "Cada rachadura guarda a chance de florescer."
-                          : "Toda cidade tem uma frequência. Encontre a sua."}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    className="primary large full"
-                    onClick={() => start(false)}
-                  >
-                    Iniciar duelo <ArrowUpRight size={20} />
-                  </button>
-                  <button className="tutorial-link" onClick={() => start(true)}>
-                    <BookOpen size={14} /> Primeira vez? Aprenda jogando{" "}
-                    <ArrowRight size={14} />
-                  </button>
-                  <div className="panel-foot">
-                    <span className="status-dot" /> PROTÓTIPO LOCAL{" "}
-                    <span>1V1 CONTRA IA</span>
-                  </div>
+                    ),
+                  )}
                 </div>
-              </main>
-              <footer className="home-footer">
-                <div className="world-note">
-                  <span>⌁</span>
-                  <p>
-                    As cidades não desapareceram.
-                    <br />
-                    <strong>Aprenderam a respirar de novo.</strong>
-                  </p>
-                </div>
-                <div className="build-note">
-                  EM DESENVOLVIMENTO · V0.1
-                  <br />
-                  <span>Um universo original em construção.</span>
-                </div>
-              </footer>
-            </>
-          ) : screen === "collection" ? (
-            <main className="collection-page">
-              <button className="text-button" onClick={() => setScreen("home")}>
-                <ArrowLeft size={15} /> Voltar à estação
-              </button>
-              <div className="eyebrow">FRAGMENTOS DE UM MUNDO VIVO</div>
-              <h1>
-                Conheça os <em>Ecos.</em>
-              </h1>
-              <p>
-                O conjunto inicial de teste. As ilustrações das cartas estão em
-                revisão de direção de arte.
-              </p>
-              <div className="filter-tabs">
-                {(["all", "neutral", "jardins", "aurora"] as const).map((f) => (
-                  <button
-                    key={f}
-                    className={filter === f ? "active" : ""}
-                    onClick={() => setFilter(f)}
-                  >
-                    {f === "all"
-                      ? "Todos"
-                      : f === "neutral"
-                        ? "Neutros"
-                        : DECKS[f].name}
-                  </button>
-                ))}
-              </div>
-              <div className="collection-grid">
-                {Object.values(CARDS)
-                  .filter((c) => filter === "all" || c.region === filter)
-                  .map((c) => (
+                <p className="micro" role="status">
+                  {visibleCards.length} Ecos encontrados
+                </p>
+                {visibleCards.length === 0 && (
+                  <div className="hub-panel empty-state">
+                    <h2>Nenhum Eco por aqui.</h2>
+                    <p>Tente outro nome ou habilidade, ou remova os filtros.</p>
+                    <button
+                      className="secondary"
+                      onClick={() => {
+                        setQuery("");
+                        setFilter("all");
+                      }}
+                    >
+                      Limpar busca e filtros
+                    </button>
+                  </div>
+                )}
+                <div className="collection-grid">
+                  {visibleCards.map((c) => (
                     <Card
                       key={c.id}
                       card={c}
                       onSelect={() => setInspected(c.id)}
                     />
                   ))}
-              </div>
-            </main>
-          ) : (
-            <main className="atelier-page">
-              <button className="text-button" onClick={() => setScreen("home")}>
-                <ArrowLeft size={15} /> Voltar à estação
-              </button>
-              <div className="eyebrow">DIREÇÃO DE PERSONAGENS · ESTUDO 02</div>
-              <h1>
-                Menos textura.
-                <br />
-                <em>Mais personalidade.</em>
-              </h1>
-              <p>
-                Uma nova proposta para Brotoco: cerâmica, semente e gesto.
-                Silhueta assimétrica, formas simples e quatro cores principais.
-                Estudo para avaliação; ainda não é arte final.
-              </p>
-              <Image
-                width={1536}
-                height={1024}
-                src="/art/brotoco-model-v2.png"
-                alt="Estudo de Brotoco: criatura de terracota com braços grandes, máscara escura e folha assimétrica, em diferentes vistas"
+                </div>
+              </main>
+            ) : screen === "decks" ? (
+              <DecksScreen
+                deck={deck}
+                onDeck={setDeck}
+                onInspect={setInspected}
               />
-              <div className="atelier-criteria">
-                <span>01 · SILHUETA RECONHECÍVEL</span>
-                <span>02 · ANATOMIA CONSISTENTE</span>
-                <span>03 · EXPRESSÃO ANTES DE BRILHO</span>
-              </div>
-            </main>
-          )}
-        </div>
+            ) : screen === "store" ? (
+              <StoreScreen profile={profile} />
+            ) : screen === "profile" ? (
+              <ProfileScreen profile={profile} />
+            ) : screen === "settings" ? (
+              <SettingsScreen profile={profile} />
+            ) : (
+              <main className="atelier-page">
+                <Link className="text-button" href="/">
+                  <ArrowLeft size={15} /> Voltar à estação
+                </Link>
+                <div className="eyebrow">
+                  DIREÇÃO DE PERSONAGENS · ESTUDO 02
+                </div>
+                <h1>
+                  Menos textura.
+                  <br />
+                  <em>Mais personalidade.</em>
+                </h1>
+                <p>
+                  Uma nova proposta para Brotoco: cerâmica, semente e gesto.
+                  Silhueta assimétrica, formas simples e quatro cores
+                  principais. Estudo para avaliação; ainda não é arte final.
+                </p>
+                <Image
+                  width={1536}
+                  height={1024}
+                  src="/art/brotoco-model-v2.png"
+                  alt="Estudo de Brotoco: criatura de terracota com braços grandes, máscara escura e folha assimétrica, em diferentes vistas"
+                />
+                <div className="atelier-criteria">
+                  <span>01 · SILHUETA RECONHECÍVEL</span>
+                  <span>02 · ANATOMIA CONSISTENTE</span>
+                  <span>03 · EXPRESSÃO ANTES DE BRILHO</span>
+                </div>
+              </main>
+            )}
+          </div>
+        </HubShell>
       )}
       {guide && (
         <div className="dialog-backdrop" onClick={() => setGuide(false)}>
@@ -475,6 +556,6 @@ export default function App() {
           </section>
         </div>
       )}
-    </>
+    </div>
   );
 }

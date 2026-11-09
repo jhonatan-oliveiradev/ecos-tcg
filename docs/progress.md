@@ -38,3 +38,11 @@ Linha evolutiva adotada: Brotoco → Terruno → Ceroto. IDs e nomes públicos a
 Migração autorizada para App Router, preservando motor, conteúdo, IA e componentes. Página/layout são Server Components e a aplicação de duelo mantém uma fronteira cliente explícita. Scripts, TypeScript, lint, metadados e configuração Vercel passam ao Next.js; Vitest fica independente do build da aplicação. Contas, banco e servidor de partidas continuam no próximo marco.
 
 Validação da migração: 31 testes passaram, assim como typecheck, lint, produção e formatação. Runner E2E com oito casos preparado, mas lançamento do Chromium bloqueado pelo ambiente antes das páginas. Navegador integrado sem acesso ao servidor local; validar preview antes de promover para produção.
+
+## Central do jogador — 9/11/2026
+
+Referência estrutural indicada: Pokébonk, sem copiar visual. A referência não inicializou no navegador integrado por ausência de WebGL 2. O ECOS publicado em Next.js foi validado interativamente: guia com foco, entrada no duelo, mulligan e iniciativa.
+
+Nova central com navegação por URLs reais, oito seções, catálogo pesquisável, listas e curvas dos decks, acabamentos iniciais gratuitos e perfil convidado. Preferências e até 50 resultados concluídos ficam no navegador. IDs de registro independem da semente; gravação idempotente impede contagem duplicada. Saída antecipada não conta como duelo concluído. Escape agora cancela a confirmação de saída.
+
+Contas, economia, edição de decks, tutorial sequencial e multiplayer seguem pendentes. Ver `browser-game-structure.md`.
