@@ -1,0 +1,37 @@
+{
+  "name": "ecos-tcg",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "test:e2e": "playwright test",
+    "format": "prettier --write src docs README.md *.ts *.json *.js index.html",
+    "format:check": "prettier --check src docs README.md *.ts *.json *.js index.html"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "latest",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "latest",
+    "eslint": "^9.0.0",
+    "prettier": "^3.9.10",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "latest",
+    "vite": "^8.0.0",
+    "vitest": "latest"
+  },
+  "engines": {
+    "node": "24.x"
+  }
+}

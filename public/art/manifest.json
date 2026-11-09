@@ -1,0 +1,16 @@
+{
+  "arena.png": {
+    "status": "environment-concept",
+    "source": "image generation",
+    "description": "Estação-jardim, metrópole retomada pela natureza"
+  },
+  "brotoco-model-v2.png": {
+    "status": "pending-user-review",
+    "source": "image generation",
+    "description": "Estudo de personagem 2D: terracota, braços grandes e folha assimétrica"
+  },
+  "card-illustrations": {
+    "status": "on-hold",
+    "description": "Identificadas na interface como ilustração em revisão. Atlas anterior rejeitado, arquivado em docs/rejected-art; não utilizado no jogo."
+  }
+}
