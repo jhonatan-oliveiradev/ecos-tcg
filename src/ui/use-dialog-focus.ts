@@ -28,7 +28,9 @@ export function useDialogFocus() {
       if (!active) return;
       const controls = focusable(active);
       if (e.key === "Escape") {
-        const close = active.querySelector<HTMLButtonElement>(".dialog-close");
+        const close = active.querySelector<HTMLButtonElement>(
+          ".dialog-close, [data-dialog-dismiss]",
+        );
         if (close) {
           e.preventDefault();
           close.click();
