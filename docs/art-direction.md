@@ -1,3 +1,7 @@
+# Atualização — primeiro elenco integrado
+
+A solicitação de ampliar as criaturas originou o estudo `public/art/ecos-roster-v1.png`, agora visível no duelo, cartas selecionadas, inspeção das evoluções e bestiário. É material para avaliação, sem aprovação final presumida. Consulte `duel-v0.3.md` para mapeamento e limitações; esta atualização substitui a espera de produção descrita abaixo.
+
 # Direção de arte — revisão 2
 
 O autor rejeitou o atlas inicial em 9/11/2026: criaturas genéricas e aparência excessiva de imagem gerada. Sua referência destaca personagens reconhecíveis, desenho intencional e personalidade. Essa orientação substitui a direção anterior das criaturas; não muda o combate aprovado.

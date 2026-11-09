@@ -34,7 +34,7 @@ A aplicação usa Next.js App Router. Para servir o build de produção, execute
 
 ## Estado visual
 
-O autor rejeitou a primeira coleção de criaturas. O novo estudo de Brotoco está pendente de avaliação. As demais cartas indicam “Ilustração em revisão”; não são artes finais. Estágios evolutivos ainda compartilham o mesmo estudo visual. A arena é arte conceitual gerada. Veja `docs/art-direction.md`.
+O primeiro elenco tem oito estudos integrados: Brotoco, Terruno, Ceroto, Sintila, Voltria, Cerviga, Pipinal e Musguil. O bestiário em `/bestiario` apresenta habitat, personalidade e função. As formas Desperta/Ascendente de Voltria compartilham arte; demais cartas continuam em revisão. Arte conceitual gerada, sujeita a aprovação. Veja `docs/art-direction.md` e `docs/duel-v0.3.md`.
 
 ## Arquitetura e limites
 
@@ -63,3 +63,7 @@ A migração não adiciona contas, banco ou multiplayer. A plataforma poderá us
 A estação agora organiza o jogo em rotas: `/jogar`, `/ecos`, `/decks`, `/loja`, `/perfil`, `/atelie` e `/ajustes`. O catálogo permite busca e filtros; os decks mostram lista, curva e estratégia; a loja aplica dois acabamentos gratuitos. Nome, deck padrão, acabamento, movimento e os últimos 50 resultados reais ficam neste navegador, sem conta ou sincronização. Vitórias e marcos locais não concedem moeda ou recompensas comerciais.
 
 Consulte `docs/browser-game-structure.md` para responsabilidades e próximos marcos. O catálogo continua público, e ainda não representa uma coleção com propriedade individual das cartas. O construtor de decks e a loja com transações pertencem às próximas fases.
+
+## Duelo v0.3
+
+Turnos explícitos: preparação → batalha → encerrar. Ataques não custam energia; escolha atacante e alvo (criatura ou Nexo). A interface mostra disponibilidade, previsão de dano, sinergias e instruções contextuais. Duas ações de encerrar turno completam a rodada. Respostas sem escolhas avançam automaticamente. Regras completas e limitações em `docs/duel-v0.3.md`.

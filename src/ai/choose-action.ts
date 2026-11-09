@@ -10,7 +10,10 @@ export function chooseAction(view: PlayerView, seed: number): Action {
       case "mulligan":
         return 100;
       case "pass":
+      case "end-turn":
         return 0;
+      case "start-battle":
+        return 1;
       case "evolve-companion":
         return 90;
       case "summon-companion":
@@ -18,7 +21,23 @@ export function chooseAction(view: PlayerView, seed: number): Action {
       case "attack": {
         const u = own.board.find((x) => x.id === a.unitId)!;
         const atk = stats(context, u)[0];
-        return atk >= enemy.nexus ? 150 : 40 + atk;
+        if (a.targetId) {
+          const target = enemy.board.find((u) => u.id === a.targetId)!;
+          const [counter, health] = stats(context, target);
+          const kill = atk >= health - target.damage + target.barrier;
+          const survives =
+            stats(context, u)[1] - u.damage + u.barrier > counter;
+          return (
+            30 +
+            Number(kill) * 30 +
+            Number(survives) * 12 -
+            Number(!survives && !kill) * 60
+          );
+        }
+        const canBlock = enemy.board.some((u) => !u.exhausted);
+        return !canBlock && atk >= enemy.nexus
+          ? 150
+          : 40 + atk - Number(canBlock) * 15;
       }
       case "decline-block":
         return own.nexus > 12 ? 2 : -10;

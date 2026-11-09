@@ -31,7 +31,7 @@ export const COMPANIONS: Record<string, CompanionDef> = {
       text: "Cause 1 de dano a cada criatura inimiga como um único efeito.",
     },
     name: "Sintila",
-    forms: ["Sintila", "Sintila Desperta", "Sintila Ascendente"],
+    forms: ["Sintila", "Voltria", "Voltria Ascendente"],
     region: "aurora",
     cost: 2,
     stats: [

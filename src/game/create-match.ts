@@ -37,7 +37,14 @@ export function createMatch(config: MatchConfig): GameState {
     };
   }
   const pick = nextRandom(rng);
-  const starter = pick.value < 0.5 ? "p1" : "p2";
+  const starter =
+    config.mode === "tutorial" ? "p1" : pick.value < 0.5 ? "p1" : "p2";
+  if (config.mode === "tutorial") {
+    const p = players.p1;
+    const cheap = p.deck.findIndex((c) => c.defId === "vigia-musgo");
+    if (!p.hand.some((c) => c.defId === "vigia-musgo") && cheap >= 0)
+      [p.hand[0], p.deck[cheap]] = [p.deck[cheap], p.hand[0]];
+  }
   return {
     matchId: `match-${config.seed}-${config.deckIds.join("-")}`,
     revision: 0,
@@ -47,6 +54,9 @@ export function createMatch(config: MatchConfig): GameState {
     phase: "mulligan",
     round: 1,
     priority: starter,
+    turnOwner: starter,
+    turnStep: "preparation",
+    turnsEnded: 0,
     starter,
     players,
     stack: [],

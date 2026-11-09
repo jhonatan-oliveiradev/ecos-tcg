@@ -24,6 +24,8 @@ import type {
 } from "../../game/types";
 import { CARDS } from "../../content/cards";
 import { COMPANIONS, STAGES } from "../../content/companions";
+import { CreatureArt } from "../cards/creature-art";
+import { creatureFor } from "../../content/creatures";
 import { Card } from "../cards/card";
 import { HoloFinish } from "../cards/holo-finish";
 import { PendingEffects, describeUnit } from "./pending-effects";
@@ -44,6 +46,7 @@ export function DuelScreen({
   tutorial?: boolean;
   defaultHolo?: boolean;
 }) {
+  const [attackerId, setAttacker] = useState<string | null>(null);
   const [selectedId, setSelected] = useState<string | null>(null);
   const [inspect, setInspect] = useState<string | null>(null);
   const [inspectOwner, setInspectOwner] = useState<PlayerId | null>(null);
@@ -65,10 +68,30 @@ export function DuelScreen({
   );
   const summon = v.actions.find((x) => x.action.type === "summon-companion");
   const evolve = v.actions.find((x) => x.action.type === "evolve-companion");
+  const battle = v.actions.find((x) => x.action.type === "start-battle");
+  const end = v.actions.find((x) => x.action.type === "end-turn");
+  const attacks = v.actions.filter(
+    (x) => x.action.type === "attack" && !x.action.targetId,
+  );
+  const attackChoices = v.actions.filter(
+    (x) => x.action.type === "attack" && x.action.unitId === attackerId,
+  );
+  const availableAttackers = v.self.board.filter(
+    (u) =>
+      !u.exhausted &&
+      (u.enteredRound < v.round || (!u.companion && CARDS[u.defId].haste)),
+  );
   const activeWeather = v.weather === "rain";
+  const turnLabel = v.turnOwner === v.playerId ? "Seu turno" : "Turno de Iara";
+  const battleAdvice = attacks.length
+    ? `Escolha um dos ${attacks.length} ataques abaixo. Atacar custa 0 energia.`
+    : v.self.board.length === 0
+      ? "Invoque uma criatura na preparação. Ela poderá atacar na próxima rodada."
+      : "Criaturas recém-invocadas aguardam a próxima rodada. Cada criatura ataca uma vez por rodada.";
   const doAction = (a: Action) => {
     onAction(a);
     setSelected(null);
+    setAttacker(null);
   };
   const actionLabel = (x: LegalAction) => {
     const a = x.action;
@@ -105,7 +128,12 @@ export function DuelScreen({
     );
     const c = u.companion ? COMPANIONS[u.defId] : null;
     const card = u.companion ? null : CARDS[u.defId];
-    const action = targetChoice ?? ownActions[0];
+    const attackTarget = enemy
+      ? attackChoices.find(
+          (x) => x.action.type === "attack" && x.action.targetId === u.id,
+        )
+      : undefined;
+    const action = targetChoice ?? attackTarget ?? ownActions[0];
     const Icon = u.companion
       ? Sparkles
       : card?.region === "aurora"
@@ -118,7 +146,9 @@ export function DuelScreen({
         <button
           onClick={() =>
             action
-              ? doAction(action.action)
+              ? action.action.type === "attack" && !enemy
+                ? (setSelected(null), setAttacker(u.id))
+                : doAction(action.action)
               : (setInspect(u.defId), setInspectOwner(u.owner))
           }
           aria-label={`${c ? c.forms[u.stage] : card?.name}, ataque ${attack}, vida ${hp - u.damage}${action ? ", " + action.label : ""}`}
@@ -127,13 +157,19 @@ export function DuelScreen({
             {v.stack.some(
               (e) => e.target?.kind === "unit" && e.target.id === u.id,
             ) && <span className="target-marker">ALVO</span>}
-            {c?.id === "brotoco" ? (
-              <div className="brotoco-study" />
+            {creatureFor(u.defId, u.stage) ? (
+              <CreatureArt defId={u.defId} stage={u.stage} />
             ) : (
               <Icon size={42} strokeWidth={1} />
             )}
             <span className="unit-state">
-              {u.companion ? STAGES[u.stage] : u.exhausted ? "EXAURIDA" : "ECO"}
+              {u.exhausted
+                ? "JÁ AGIU"
+                : u.enteredRound === v.round && !card?.haste
+                  ? "RECÉM-INVOCADA"
+                  : u.companion
+                    ? STAGES[u.stage]
+                    : "PRONTA"}
             </span>
             {u.barrier > 0 && (
               <span className="barrier">
@@ -164,9 +200,20 @@ export function DuelScreen({
         >
           ＋
         </button>
+        {!enemy && !action && (
+          <span className="unit-readiness">
+            {u.exhausted
+              ? "Já atacou ou bloqueou"
+              : u.enteredRound === v.round && !card?.haste
+                ? `Ataca na rodada ${v.round + 1}`
+                : v.turnStep === "preparation"
+                  ? "Pronta para a batalha"
+                  : "Aguarde seu turno"}
+          </span>
+        )}
         {action && (
           <span className="unit-hint">
-            {targetChoice
+            {targetChoice || attackTarget
               ? "ESCOLHER ALVO"
               : v.phase === "block"
                 ? "BLOQUEAR"
@@ -207,8 +254,8 @@ export function DuelScreen({
       <aside className="duel-sidebar">
         <div className="eyebrow">SEU VÍNCULO</div>
         <div className={`companion-medallion ${comp.id}`}>
-          {comp.id === "brotoco" ? (
-            <div className="brotoco-study" />
+          {creatureFor(comp.id, v.self.companion.stage) ? (
+            <CreatureArt defId={comp.id} stage={v.self.companion.stage} />
           ) : (
             <Radio size={60} strokeWidth={1} />
           )}
@@ -312,6 +359,20 @@ export function DuelScreen({
         </div>
       </aside>
       <main className="battle-area">
+        <nav className="turn-track" aria-label="Etapas do turno">
+          <strong>
+            {turnLabel} · R{v.round}
+          </strong>
+          <span
+            aria-current={v.turnStep === "preparation" ? "step" : undefined}
+          >
+            01 Preparação
+          </span>
+          <span aria-current={v.turnStep === "battle" ? "step" : undefined}>
+            02 Batalha
+          </span>
+          <span>03 Encerrar</span>
+        </nav>
         <div className="player-strip opponent">
           <div className="avatar">
             <Radio size={22} />
@@ -399,17 +460,32 @@ export function DuelScreen({
                       ? "Você pode responder"
                       : "O adversário pode responder"
                     : myTurn
-                      ? "Sua iniciativa"
+                      ? v.turnStep === "preparation"
+                        ? "Prepare seu campo"
+                        : "Escolha quem vai atacar"
                       : "Iara está pensando"}
             </strong>
             <small>
               {v.phase === "response"
-                ? "Dois passes resolvem o próximo efeito."
+                ? "Use uma Resposta ou continue. Sem opções de resposta, a resolução avança sozinha."
                 : v.phase === "block"
                   ? "Escolha uma criatura disponível ou receba o dano."
-                  : "Cada ação passa a iniciativa. Dois passes encerram a rodada."}
+                  : v.turnStep === "preparation"
+                    ? "Jogue cartas e evolua. Depois, entre na batalha."
+                    : "Escolha um atacante e o alvo. Ataques ao Nexo podem ser bloqueados; contra criaturas, ambos trocam dano."}
             </small>
           </div>
+          {battle && (
+            <button className="primary" onClick={() => doAction(battle.action)}>
+              Ir para batalha · {availableAttackers.length} prontas{" "}
+              <Swords size={15} />
+            </button>
+          )}
+          {end && (!battle || availableAttackers.length === 0) && (
+            <button className="secondary" onClick={() => doAction(end.action)}>
+              Encerrar turno <ChevronRight size={15} />
+            </button>
+          )}
           {pass && (
             <button className="primary" onClick={() => doAction(pass.action)}>
               {pass.label}
@@ -451,7 +527,7 @@ export function DuelScreen({
             ? "CARTA SELECIONADA"
             : v.stack.length
               ? "EM RESOLUÇÃO"
-              : "O MUNDO ESCUTA"}
+              : "PLANO DE BATALHA"}
         </div>
         {selectedCard ? (
           <>
@@ -471,10 +547,13 @@ export function DuelScreen({
               {!choices.length && (
                 <p className="hint">
                   {!myTurn
-                    ? "Aguarde sua iniciativa."
+                    ? "Aguarde sua vez de agir."
                     : v.self.energy < CARDS[selectedCard.defId].cost
                       ? "Energia insuficiente."
-                      : "Não há alvo válido ou esta carta não pode ser usada nesta janela."}
+                      : v.turnStep === "battle" &&
+                          !CARDS[selectedCard.defId].response
+                        ? "Invoque criaturas e use táticas durante a preparação. Agora você está na batalha."
+                        : "Não há alvo válido ou esta carta não pode ser usada nesta janela."}
                 </p>
               )}
               <button className="text-button" onClick={() => setSelected(null)}>
@@ -485,16 +564,108 @@ export function DuelScreen({
         ) : v.stack.length ? (
           <PendingEffects view={v} />
         ) : (
-          <div className="arena-story">
-            <span>⌁</span>
+          <div className="battle-coach">
+            <h3>
+              {v.phase === "mulligan"
+                ? "Sua primeira decisão"
+                : v.turnOwner !== v.playerId
+                  ? "Observe o adversário"
+                  : v.turnStep === "preparation"
+                    ? "Prepare. Combine. Ataque."
+                    : "Você comanda os ataques"}
+            </h3>
             <p>
-              O concreto lembra.
-              <br />
-              As raízes respondem.
+              {v.phase === "mulligan"
+                ? "Procure uma criatura de custo 1 para começar. Selecione cartas caras para trocar."
+                : v.turnOwner !== v.playerId
+                  ? "Acompanhe os ataques de Iara. Quando houver uma escolha de bloqueio ou uma Resposta disponível, o duelo vai aguardar sua decisão."
+                  : battleAdvice}
             </p>
+            {!attackChoices.length &&
+              attacks.map((x) => {
+                if (x.action.type !== "attack") return null;
+                const u = v.self.board.find(
+                  (u) => u.id === (x.action as { unitId: string }).unitId,
+                )!;
+                const power = stats(
+                  { weather: { active: v.weather, override: null } },
+                  u,
+                )[0];
+                return (
+                  <button
+                    className="choice attack-choice"
+                    key={u.id}
+                    onClick={() => {
+                      setAttacker(u.id);
+                      setSelected(null);
+                    }}
+                  >
+                    <Swords size={16} />
+                    <span>
+                      Atacar com{" "}
+                      {u.companion
+                        ? COMPANIONS[u.defId].forms[u.stage]
+                        : CARDS[u.defId].name}
+                      <small>
+                        {power} de dano ao Nexo se não houver bloqueio · 0
+                        energia
+                      </small>
+                    </span>
+                  </button>
+                );
+              })}
+            {attackChoices.length > 0 && (
+              <div className="attack-targets">
+                <strong>Escolha o alvo</strong>
+                {attackChoices.map((x, i) => (
+                  <button
+                    className="choice attack-choice"
+                    key={i}
+                    onClick={() => doAction(x.action)}
+                  >
+                    {x.action.type === "attack" && !x.action.targetId
+                      ? "Atacar Nexo · pode ser bloqueado"
+                      : x.label}
+                  </button>
+                ))}
+                <button
+                  className="text-button"
+                  onClick={() => setAttacker(null)}
+                >
+                  Cancelar ataque
+                </button>
+              </div>
+            )}
+            {v.combat && (
+              <div className="combat-announcement" role="status">
+                <Swords size={18} />
+                <p>
+                  {describeUnit(v, v.combat.attackerId)} está atacando{" "}
+                  {v.combat.targetId
+                    ? describeUnit(v, v.combat.targetId)
+                    : "o Nexo"}
+                  .
+                  {v.combat.blockerId
+                    ? ` Bloqueio: ${describeUnit(v, v.combat.blockerId)}. O dano será trocado entre as criaturas.`
+                    : " O defensor pode proteger o Nexo com uma criatura disponível."}
+                </p>
+              </div>
+            )}
+            <div className="combo-tip">
+              <strong>
+                {comp.region === "jardins"
+                  ? "Sinergia · Cuidar e resistir"
+                  : "Sinergia · Chuva e sinal"}
+              </strong>
+              <p>
+                {comp.region === "jardins"
+                  ? "Brotoco em campo → Abrigo previne dano → Reparo cura um aliado ferido. Cada objetivo cumprido dá ressonância para evoluir."
+                  : "Previsão traz chuva → Lontra Condutora ganha +1 ataque → dano de combate na chuva e Respostas efetivas fazem Sintila evoluir."}
+              </p>
+            </div>
             <small>
-              Uma estação abandonada voltou a emitir sinais. Cada Eco carrega um
-              fragmento dessa história.
+              Objetivo: Nexo adversário de 25 → 0. Ataques são gratuitos.
+              Energia paga cartas e evoluções.
             </small>
           </div>
         )}
@@ -507,17 +678,19 @@ export function DuelScreen({
             <BookOpen size={18} />
             <strong>Aprenda jogando</strong>
             <p>
-              {v.phase === "mulligan"
-                ? "Clique nas cartas que deseja trocar e confirme."
-                : v.self.energy < 2 && v.round === 1
-                  ? "Invoque uma criatura de custo 1 ou passe. A energia aumenta a cada rodada."
-                  : !v.self.board.some((u) => u.companion)
-                    ? "Quando tiver 2 de energia, invoque sua companheira pelo painel de vínculo."
-                    : v.phase === "response"
-                      ? "Você pode usar cartas de Resposta ou passar para avançar a resolução."
-                      : v.self.companion.resonance < 3
-                        ? "Cumpra os objetivos do painel esquerdo para ganhar ressonância."
-                        : "Prepare energia e evolua sua companheira. Ataques e evoluções permitem respostas."}
+              {attacks.length
+                ? "Seu ataque está disponível! Use um botão Atacar no painel ou clique na criatura destacada. Não custa energia."
+                : v.phase === "mulligan"
+                  ? "Clique nas cartas que deseja trocar e confirme."
+                  : v.self.energy < 2 && v.round === 1
+                    ? "Invoque uma criatura de custo 1 ou passe. A energia aumenta a cada rodada."
+                    : !v.self.board.some((u) => u.companion)
+                      ? "Quando tiver 2 de energia, invoque sua companheira pelo painel de vínculo."
+                      : v.phase === "response"
+                        ? "Você pode usar cartas de Resposta ou passar para avançar a resolução."
+                        : v.self.companion.resonance < 3
+                          ? "Cumpra os objetivos do painel esquerdo para ganhar ressonância."
+                          : "Prepare energia e evolua sua companheira. Ataques e evoluções permitem respostas."}
             </p>
           </div>
         )}
@@ -554,7 +727,10 @@ export function DuelScreen({
                       ? prev.filter((id) => id !== c.id)
                       : [...prev, c.id],
                   );
-                else setSelected(selected === c.id ? null : c.id);
+                else {
+                  setAttacker(null);
+                  setSelected(selected === c.id ? null : c.id);
+                }
               }}
               onInspect={() => setInspect(c.defId)}
               compact

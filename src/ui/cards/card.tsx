@@ -1,3 +1,5 @@
+import { CreatureArt } from "./creature-art";
+import { creatureFor } from "../../content/creatures";
 import {
   Leaf,
   Radio,
@@ -10,6 +12,12 @@ import {
 } from "lucide-react";
 import type { CardDef } from "../../game/types";
 export function CardArt({ card }: { card: CardDef }) {
+  if (creatureFor(card.id))
+    return (
+      <div className="card-art illustrated-art">
+        <CreatureArt defId={card.id} />
+      </div>
+    );
   const Icon =
     card.kind === "creature"
       ? card.region === "aurora"

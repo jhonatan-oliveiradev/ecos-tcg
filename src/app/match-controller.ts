@@ -46,14 +46,22 @@ export function createMatchController(config: MatchConfig): MatchController {
       state.phase === "mulligan"
         ? !state.players.p2.mulliganDone
         : state.priority === "p2";
-    if (!aiTurn) return;
+    const humanActions = projectView(state, "p1").actions;
+    const automaticPass =
+      state.phase === "response" &&
+      state.priority === "p1" &&
+      humanActions.length === 1 &&
+      humanActions[0].action.type === "pass";
+    if (!aiTurn && !automaticPass) return;
     const id = state.matchId;
     timer = setTimeout(() => {
       timer = null;
       if (disposed || state.matchId !== id) return;
       act(
-        chooseAction(projectView(state, "p2"), state.seed + state.revision),
-        "p2",
+        automaticPass
+          ? { type: "pass" }
+          : chooseAction(projectView(state, "p2"), state.seed + state.revision),
+        automaticPass ? "p1" : "p2",
       );
     }, 400);
   }

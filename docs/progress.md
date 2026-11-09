@@ -46,3 +46,7 @@ Referência estrutural indicada: Pokébonk, sem copiar visual. A referência nã
 Nova central com navegação por URLs reais, oito seções, catálogo pesquisável, listas e curvas dos decks, acabamentos iniciais gratuitos e perfil convidado. Preferências e até 50 resultados concluídos ficam no navegador. IDs de registro independem da semente; gravação idempotente impede contagem duplicada. Saída antecipada não conta como duelo concluído. Escape agora cancela a confirmação de saída.
 
 Contas, economia, edição de decks, tutorial sequencial e multiplayer seguem pendentes. Ver `browser-game-structure.md`.
+
+## Revisão de combate e elenco — 09/11/2026
+
+Implementados turnos de preparação/batalha/encerramento, alvo de ataque explícito, ataque sem energia, dicas de disponibilidade/sinergia, resolução automática quando não existe resposta humana, primeira mão de tutorial com criatura de custo 1, oito estudos integrados e bestiário. Contrato e limites em `duel-v0.3.md`.

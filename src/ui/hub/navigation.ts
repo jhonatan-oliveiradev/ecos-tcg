@@ -36,6 +36,12 @@ export const HUB_NAV = [
     caption: "Registros da sua jornada",
   },
   {
+    id: "bestiary",
+    href: "/bestiario",
+    label: "Bestiário",
+    caption: "Espécies, vínculos e histórias",
+  },
+  {
     id: "atelier",
     href: "/atelie",
     label: "Ateliê",

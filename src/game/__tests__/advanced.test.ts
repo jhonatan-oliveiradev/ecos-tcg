@@ -42,9 +42,9 @@ for (const defId of ["brotoco", "sintila"])
         (x) => x.action.type === "evolve-companion",
       ),
     ).toBe(false);
-    s = send(s, s.priority, { type: "pass" });
-    s = send(s, s.priority, { type: "pass" });
-    if (s.priority !== "p1") s = send(s, s.priority, { type: "pass" });
+    s = send(s, s.priority, { type: "end-turn" });
+    s = send(s, s.priority, { type: "end-turn" });
+    if (s.priority !== "p1") s = send(s, s.priority, { type: "end-turn" });
     s = send(s, "p1", { type: "evolve-companion" });
     s = drain(s);
     expect(s.players.p1.companion.stage).toBe(2);

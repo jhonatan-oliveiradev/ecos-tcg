@@ -1,3 +1,4 @@
+import { CreatureArt } from "./creature-art";
 import type { CompanionDef, CompanionState } from "../../game/types";
 import { STAGES } from "../../content/companions";
 export function CompanionDetails({
@@ -23,6 +24,7 @@ export function CompanionDetails({
       <div className="stage-preview">
         {c.stats.map((stat, i) => (
           <div key={i} className={progress?.stage === i ? "current-stage" : ""}>
+            <CreatureArt defId={c.id} stage={i} />
             <span>{c.forms[i]}</span>
             <small>{STAGES[i]}</small>
             <strong>{stat.join(" / ")}</strong>

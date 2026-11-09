@@ -4,10 +4,10 @@ import { applyCommand, listLegalActions } from "../commands";
 import { projectView } from "../project-view";
 import type { Action } from "../types";
 import { ready, send } from "./fixtures";
-it("passes twice refill energy and draw exactly once", () => {
+it("two completed turns refill energy and draw exactly once", () => {
   let s = ready();
-  s = send(s, s.priority, { type: "pass" });
-  s = send(s, s.priority, { type: "pass" });
+  s = send(s, s.priority, { type: "end-turn" });
+  s = send(s, s.priority, { type: "end-turn" });
   expect(s.round).toBe(2);
   expect(s.players.p1.energy).toBe(2);
   expect(s.players.p1.hand).toHaveLength(5);
@@ -20,7 +20,7 @@ it("rejects stale, repeated and out of turn commands without mutation", () => {
     commandId: "unique",
     expectedRevision: s.revision,
     playerId: s.priority,
-    action: { type: "pass" } as Action,
+    action: { type: "end-turn" } as Action,
   };
   const r = applyCommand(s, c);
   expect(r.ok).toBe(true);

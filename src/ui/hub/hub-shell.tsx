@@ -7,6 +7,7 @@ import {
   Library,
   ShoppingBag,
   UserRound,
+  Leaf,
   Palette,
   SlidersHorizontal,
   ArrowUpRight,
@@ -21,6 +22,7 @@ const icons = [
   Layers,
   ShoppingBag,
   UserRound,
+  Leaf,
   Palette,
   SlidersHorizontal,
 ];

@@ -1,7 +1,7 @@
 import type { GameState, PlayerId, LegalAction, Action, Target } from "./types";
 import { CARDS } from "../content/cards";
 import { COMPANIONS } from "../content/companions";
-import { other } from "./rules";
+import { other, stats } from "./rules";
 import { getEvolutionBlockers } from "./companions";
 export function listLegalActions(s: GameState, pid: PlayerId): LegalAction[] {
   const out: LegalAction[] = [];
@@ -19,11 +19,13 @@ export function listLegalActions(s: GameState, pid: PlayerId): LegalAction[] {
     add({ type: "decline-block" }, "Receber no Nexo");
     return out;
   }
-  add(
-    { type: "pass" },
-    s.phase === "response" ? "Sem resposta" : "Passar iniciativa",
-  );
+  if (s.phase === "response") add({ type: "pass" }, "Continuar resolução");
   if (s.phase === "main") {
+    add({ type: "end-turn" }, "Encerrar turno");
+    if (s.turnStep === "preparation")
+      add({ type: "start-battle" }, "Ir para batalha");
+  }
+  if (s.phase === "main" && s.turnStep === "preparation") {
     const c = p.companion,
       def = COMPANIONS[c.defId];
     if (
@@ -38,19 +40,37 @@ export function listLegalActions(s: GameState, pid: PlayerId): LegalAction[] {
         { type: "evolve-companion" },
         c.stage === 0 ? "Despertar" : "Ascender",
       );
+  }
+  if (s.phase === "main" && s.turnStep === "battle") {
     for (const u of p.board)
       if (
         !u.exhausted &&
         (u.enteredRound < s.round || (!u.companion && CARDS[u.defId].haste))
-      )
+      ) {
         add({ type: "attack", unitId: u.id }, "Atacar Nexo");
+        for (const [index, target] of s.players[other(pid)].board.entries()) {
+          const name = target.companion
+            ? COMPANIONS[target.defId].forms[target.stage]
+            : CARDS[target.defId].name;
+          const damage = Math.max(0, stats(s, u)[0] - target.barrier);
+          add(
+            { type: "attack", unitId: u.id, targetId: target.id },
+            `Atacar ${name} · posição ${index + 1} · ${damage} de dano previsto · recebe até ${Math.max(0, stats(s, target)[0] - u.barrier)}`,
+          );
+        }
+      }
   }
   for (const card of p.hand) {
     const d = CARDS[card.defId];
     if (p.energy < d.cost) continue;
-    if (s.phase === "response" && !d.response) continue;
+    if ((s.phase === "response" || s.turnStep === "battle") && !d.response)
+      continue;
     if (d.kind === "creature") {
-      if (s.phase === "main" && p.board.length < 5)
+      if (
+        s.phase === "main" &&
+        s.turnStep === "preparation" &&
+        p.board.length < 5
+      )
         add({ type: "play-card", cardId: card.id }, `Invocar ${d.name}`);
       continue;
     }

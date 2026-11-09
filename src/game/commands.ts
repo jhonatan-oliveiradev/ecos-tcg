@@ -9,14 +9,14 @@ import { CARDS } from "../content/cards";
 import { COMPANIONS } from "../content/companions";
 import { listLegalActions } from "./legal-actions";
 import { event, other, findUnit, checkResult } from "./rules";
-import { nextRound } from "./rounds";
+import { endTurn } from "./rounds";
 import { shuffle } from "./random";
 import { summon, resolveEffect } from "./effects";
 import { advanceCombat } from "./combat";
 import { naturalWeather } from "./weather";
 export { listLegalActions } from "./legal-actions";
 function finishAction(s: GameState, pid: PlayerId) {
-  s.priority = other(pid);
+  s.priority = pid;
   s.passes = 0;
   s.phase = "main";
 }
@@ -84,18 +84,27 @@ export function applyCommand(
     s.stack = [];
     s.combat = null;
     event(s, "concede", "Um Vinculador deixou o duelo.", { owner: pid });
+  } else if (a.type === "start-battle") {
+    s.turnStep = "battle";
+    event(
+      s,
+      "battle",
+      "Batalha: escolha uma criatura pronta para atacar. Atacar não custa energia.",
+      { owner: pid },
+    );
+  } else if (a.type === "end-turn") {
+    endTurn(s);
   } else if (a.type === "pass") {
     s.passes++;
     if (s.passes < 2) s.priority = other(pid);
     else {
       s.passes = 0;
-      if (s.phase === "main") nextRound(s);
-      else if (s.stack.length) {
+      if (s.stack.length) {
         const effect = s.stack.pop()!;
         resolveEffect(s, effect);
         if (!s.result) {
           s.phase = "response";
-          s.priority = s.starter;
+          s.priority = other(effect.owner);
         }
       } else if (s.combat) advanceCombat(s);
       else {
@@ -114,7 +123,7 @@ export function applyCommand(
       finishAction(s, pid);
     } else {
       player.discard.push(card);
-      if (s.phase === "main") s.returnPriority = other(pid);
+      if (s.phase === "main") s.returnPriority = s.turnOwner;
       const e: PendingEffect = {
         id: `effect-${s.nextId++}`,
         owner: pid,
@@ -145,7 +154,7 @@ export function applyCommand(
     const u = player.board.find((x) => x.companion)!;
     player.energy -= comp.stage === 0 ? 2 : 4;
     comp.evolvedRound = s.round;
-    s.returnPriority = other(pid);
+    s.returnPriority = s.turnOwner;
     s.stack.push({
       id: `effect-${s.nextId++}`,
       owner: pid,
@@ -167,14 +176,23 @@ export function applyCommand(
     s.combat = {
       attackerId: a.unitId,
       attacker: pid,
-      blocked: false,
-      step: "before-block",
+      targetId: a.targetId,
+      blockerId: a.targetId,
+      blocked: !!a.targetId,
+      step: a.targetId ? "before-damage" : "before-block",
     };
-    s.returnPriority = other(pid);
-    event(s, "attack", "Um ataque foi declarado.", {
-      owner: pid,
-      targetId: a.unitId,
-    });
+    s.returnPriority = s.turnOwner;
+    event(
+      s,
+      "attack",
+      a.targetId
+        ? "Ataque declarado contra uma criatura: haverá troca de dano."
+        : "Ataque declarado contra o Nexo: o defensor pode bloquear.",
+      {
+        owner: pid,
+        targetId: a.unitId,
+      },
+    );
     openResponse(s, pid);
   } else if (a.type === "block" || a.type === "decline-block") {
     if (a.type === "block") {

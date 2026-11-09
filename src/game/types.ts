@@ -98,7 +98,9 @@ export type Action =
     }
   | { type: "summon-companion" }
   | { type: "evolve-companion" }
-  | { type: "attack"; unitId: string }
+  | { type: "start-battle" }
+  | { type: "end-turn" }
+  | { type: "attack"; unitId: string; targetId?: string }
   | { type: "block"; unitId: string }
   | { type: "decline-block" }
   | { type: "pass" }
@@ -128,6 +130,7 @@ export interface GameEvent {
 export interface Combat {
   attackerId: string;
   attacker: PlayerId;
+  targetId?: string;
   blockerId?: string;
   blocked: boolean;
   step: "before-block" | "choose-block" | "before-damage";
@@ -141,6 +144,9 @@ export interface GameState {
   phase: "mulligan" | "main" | "response" | "block" | "ended" | "error";
   round: number;
   priority: PlayerId;
+  turnOwner: PlayerId;
+  turnStep: "preparation" | "battle";
+  turnsEnded: number;
   starter: PlayerId;
   players: Record<PlayerId, PlayerState>;
   stack: PendingEffect[];
@@ -192,6 +198,9 @@ export interface PlayerView {
   round: number;
   phase: GameState["phase"];
   priority: PlayerId;
+  turnOwner: PlayerId;
+  turnStep: "preparation" | "battle";
+  turnsEnded: number;
   self: PublicPlayer & { hand: CardInstance[] };
   opponent: PublicPlayer;
   weather: WeatherId;

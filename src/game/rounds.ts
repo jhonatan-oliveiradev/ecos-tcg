@@ -12,6 +12,9 @@ export function nextRound(s: GameState) {
   s.weather = { active: naturalWeather(s.seed, s.round), override: null };
   s.starter = other(s.starter);
   s.priority = s.starter;
+  s.turnOwner = s.starter;
+  s.turnStep = "preparation";
+  s.turnsEnded = 0;
   s.returnPriority = s.starter;
   s.passes = 0;
   s.phase = "main";
@@ -25,4 +28,17 @@ export function nextRound(s: GameState) {
   }
   event(s, "round", `Rodada ${s.round}: energia restaurada.`);
   checkResult(s);
+}
+
+export function endTurn(s: GameState) {
+  s.turnsEnded++;
+  if (s.turnsEnded === 2) return nextRound(s);
+  s.turnOwner = other(s.turnOwner);
+  s.priority = s.turnOwner;
+  s.returnPriority = s.turnOwner;
+  s.turnStep = "preparation";
+  s.passes = 0;
+  event(s, "turn", "Novo turno: prepare suas cartas e entre na batalha.", {
+    owner: s.turnOwner,
+  });
 }

@@ -13,6 +13,8 @@ it("uses legal actions without seeing enemy hand", () => {
 it("takes an available lethal attack", () => {
   const s = ready();
   s.priority = "p1";
+  s.turnOwner = "p1";
+  s.turnStep = "battle";
   s.players.p2.nexus = 1;
   s.players.p1.board.push({
     id: "a",

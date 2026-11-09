@@ -30,6 +30,8 @@ function passResponses(s: GameState) {
 it("blocks simultaneous damage and preserves persistent damage", () => {
   let s = ready();
   s.priority = "p1";
+  s.turnOwner = "p1";
+  s.turnStep = "battle";
   unit(s, "p1", "a");
   unit(s, "p2", "b");
   s = send(s, "p1", { type: "attack", unitId: "a" });
@@ -45,6 +47,8 @@ it("blocks simultaneous damage and preserves persistent damage", () => {
 it("removed blocker keeps attack blocked", () => {
   let s = ready();
   s.priority = "p1";
+  s.turnOwner = "p1";
+  s.turnStep = "battle";
   unit(s, "p1", "a");
   unit(s, "p2", "b", "ave-sinal");
   s = send(s, "p1", { type: "attack", unitId: "a" });
@@ -58,6 +62,8 @@ it("removed blocker keeps attack blocked", () => {
 it("cannot attack with a fresh creature, allows haste", () => {
   const s = ready();
   s.priority = "p1";
+  s.turnOwner = "p1";
+  s.turnStep = "battle";
   unit(s, "p1", "fresh").enteredRound = s.round;
   expect(() => send(s, "p1", { type: "attack", unitId: "fresh" })).toThrow();
   s.players.p1.board[0].defId = "felino-tubo";
@@ -68,6 +74,8 @@ it("cannot attack with a fresh creature, allows haste", () => {
 it("dead target fizzles response and costs stay paid", () => {
   let s = ready();
   s.priority = "p1";
+  s.turnOwner = "p1";
+  s.turnStep = "battle";
   unit(s, "p2", "target", "ave-sinal");
   s.players.p1.energy = 10;
   s.players.p1.hand.push({ id: "spell", defId: "pulso" });

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { BestiaryScreen } from "../ui/hub/bestiary-screen";
 import { HubShell } from "../ui/hub/hub-shell";
 import type { HubScreen } from "../ui/hub/navigation";
 import {
@@ -168,7 +169,7 @@ export default function App({ screen = "station" }: { screen?: HubScreen }) {
   function start(withTutorial = false) {
     setTutorial(withTutorial);
     setRecordId(crypto.randomUUID());
-    const seed = Math.floor(Math.random() * 1e8) + 1;
+    const seed = withTutorial ? 42 : Math.floor(Math.random() * 1e8) + 1;
     setController(
       createMatchController({
         seed,
@@ -388,6 +389,8 @@ export default function App({ screen = "station" }: { screen?: HubScreen }) {
                   ))}
                 </div>
               </main>
+            ) : screen === "bestiary" ? (
+              <BestiaryScreen />
             ) : screen === "decks" ? (
               <DecksScreen
                 deck={deck}
@@ -453,9 +456,10 @@ export default function App({ screen = "station" }: { screen?: HubScreen }) {
             <div className="eyebrow">MANUAL DO VINCULADOR</div>
             <h2>Faça seu vínculo crescer.</h2>
             <p>
-              Reduza o Nexo adversário de 25 a zero. Cada ação passa a
-              iniciativa; dois passes encerram a rodada e restauram a energia,
-              que cresce até 10.
+              Reduza o Nexo adversário de 25 a zero. No seu turno, prepare o
+              campo, entre na batalha e encerre o turno. Uma rodada contém um
+              turno de cada jogador; depois, ambos compram uma carta e restauram
+              a energia, que cresce até 10.
             </p>
             <div className="guide-grid">
               <div>
@@ -471,8 +475,9 @@ export default function App({ screen = "station" }: { screen?: HubScreen }) {
                 <Swords />
                 <h3>Ataque e responda</h3>
                 <p>
-                  Clique em uma criatura disponível para atacar. O adversário
-                  pode responder e escolher um bloqueador. Depois, ambos podem
+                  Entre na batalha e use Atacar no painel ou clique em uma
+                  criatura pronta. Ataques não custam energia. O adversário pode
+                  responder e escolher um bloqueador. Depois, ambos podem
                   responder antes do dano.
                 </p>
               </div>

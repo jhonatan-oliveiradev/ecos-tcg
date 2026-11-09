@@ -10,7 +10,23 @@
     "description": "Estudo de personagem 2D: terracota, braços grandes e folha assimétrica"
   },
   "card-illustrations": {
-    "status": "on-hold",
-    "description": "Identificadas na interface como ilustração em revisão. Atlas anterior rejeitado, arquivado em docs/rejected-art; não utilizado no jogo."
+    "status": "partial-concept-integration",
+    "description": "Vigia de Musgo (Musguil), Ave de Sinal (Pipinal) e Cervo de Concreto (Cerviga) usam o elenco v1. Outras cartas mantêm indicação de arte em revisão."
+  },
+  "ecos-roster-v1.png": {
+    "status": "concept-in-runtime-pending-review",
+    "source": "image generation",
+    "layout": "4 columns × 2 rows; 1536 × 1024; SVG viewBox crops, source preserved",
+    "cells": [
+      "Brotoco",
+      "Terruno",
+      "Ceroto",
+      "Sintila",
+      "Voltria",
+      "Cerviga",
+      "Pipinal",
+      "Musguil"
+    ],
+    "description": "Primeiro elenco integrado às cartas, campo e bestiário. Voltria compartilha arte entre Desperta e Ascendente; demais cartas aguardam ilustrações."
   }
 }
