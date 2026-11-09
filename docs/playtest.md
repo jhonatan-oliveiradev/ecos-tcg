@@ -28,3 +28,11 @@ Foram escritos cenários Playwright para 1440×900 e 1280×720, mas a execução
 - Efeitos e gatilhos suportam o catálogo fechado deste marco; não há linguagem genérica de efeitos arbitrários.
 
 As correções da revisão final adicionaram identificação de alvos de resposta, detalhes públicos das companheiras e tela de resultado acessível. Veja review.md para evidências e limites.
+
+## Migração Next.js — 9/11/2026
+
+- Next.js 16.4.5 App Router: build de produção, tipos, lint e formatação passaram.
+- Os 31 testes em 14 arquivos passaram após a migração, incluindo as simulações de 50 partidas.
+- Playwright atualizado para iniciar o build de produção com `next start`; quatro cenários em dois viewports (oito casos). O novo cenário verifica metadados, hidratação sem erros de console e carregamento da imagem do Ateliê.
+- Tentativa de execução E2E bloqueada antes de abrir as páginas: Chromium aborta com `socket() failed: Operation not permitted`. Os oito casos não foram validados. O navegador integrado também não alcançou o servidor local (`ERR_CONNECTION_REFUSED`).
+- Validação interativa do preview Next.js continua pendente; o QA descrito acima corresponde à versão anterior em Vite.

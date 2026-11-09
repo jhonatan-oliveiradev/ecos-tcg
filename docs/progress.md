@@ -32,3 +32,9 @@ Final: Ruling: manter branch local e entregar código/arte/documentação em arq
 Destino autorizado pelo autor: jhonatan-oliveiradev/ecos-tcg. Repositório inicialmente vazio, branch padrão main.
 Linha evolutiva adotada: Brotoco → Terruno → Ceroto. IDs e nomes públicos atualizados; atributos e custos mantidos. Ilustrações das evoluções continuam provisórias.
 31 testes, typecheck, lint, build e diff check passaram após a alteração. Configuração Vercel preparada com Vite, Node 24.x, npm ci e saída dist; sem env obrigatória.
+
+## Migração para Next.js — 9/11/2026
+
+Migração autorizada para App Router, preservando motor, conteúdo, IA e componentes. Página/layout são Server Components e a aplicação de duelo mantém uma fronteira cliente explícita. Scripts, TypeScript, lint, metadados e configuração Vercel passam ao Next.js; Vitest fica independente do build da aplicação. Contas, banco e servidor de partidas continuam no próximo marco.
+
+Validação da migração: 31 testes passaram, assim como typecheck, lint, produção e formatação. Runner E2E com oito casos preparado, mas lançamento do Chromium bloqueado pelo ambiente antes das páginas. Navegador integrado sem acesso ao servidor local; validar preview antes de promover para produção.

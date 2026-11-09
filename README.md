@@ -4,14 +4,14 @@ TCG original para navegador: fantasia em uma metrópole retomada pela natureza, 
 
 ## Rodar
 
-Requer Node compatível com `package.json`/Vite instalado (usado no desenvolvimento: Node 24.22.1).
+Requer Node 24.x instalado (usado no desenvolvimento: Node 24.22.1).
 
 ```bash
 npm ci
 npm run dev
 ```
 
-Abra a URL exibida pelo Vite. Escolha Jardins de Concreto ou Distrito Aurora e inicie um duelo contra IA. O botão “Aprenda jogando” ativa dicas contextuais. O guia explica ataques, respostas, bloqueios e evolução.
+Abra http://localhost:3000. Escolha Jardins de Concreto ou Distrito Aurora e inicie um duelo contra IA. O botão “Aprenda jogando” ativa dicas contextuais. O guia explica ataques, respostas, bloqueios e evolução.
 
 ```bash
 npm test
@@ -20,7 +20,7 @@ npm run lint
 npm run build
 ```
 
-Build estático em `dist/`; sirva a pasta via HTTP, não abra por `file://`. `npm run test:e2e` requer os navegadores do Playwright instalados (`npx playwright install chromium`) em ambiente local suportado. Veja `docs/playtest.md` para distinguir os testes executados dos cenários apenas preparados.
+A aplicação usa Next.js App Router. Para servir o build de produção, execute `npm run build` e `npm start`. `npm run test:e2e` requer os navegadores do Playwright instalados (`npx playwright install chromium` ou `ECOS_CHROMIUM_PATH=/caminho/do/chromium`) em ambiente local suportado. Veja `docs/playtest.md` para distinguir os testes executados dos cenários apenas preparados.
 
 ## O que funciona
 
@@ -50,4 +50,10 @@ Brotoco → Terruno → Ceroto. Os nomes aparecem nos estágios Inicial, Despert
 
 ## Deploy na Vercel
 
-Importe `jhonatan-oliveiradev/ecos-tcg` com a raiz do repositório, framework Vite, Node 24.x, instalação `npm ci`, build `npm run build` e saída `dist`. Não há variáveis de ambiente obrigatórias para este protótipo local.
+Importe `jhonatan-oliveiradev/ecos-tcg` com a raiz do repositório, framework Next.js, Node 24.x, instalação `npm ci` e build `npm run build`. Use a saída padrão do Next.js, sem override para `dist`. Não há variáveis de ambiente obrigatórias para este protótipo local.
+
+## Base para os próximos marcos
+
+O layout e a página inicial usam Server Components. `src/app/app.tsx` delimita o cliente interativo do jogo; o motor em `src/game`, conteúdo em `src/content` e IA em `src/ai` continuam independentes do Next.js. Vitest mantém sua configuração própria; Vite é apenas dependência transitiva do runner de testes.
+
+A migração não adiciona contas, banco ou multiplayer. A plataforma poderá usar APIs do Next.js para conta, coleção e decks. Partidas online deverão validar comandos no servidor, manter informação oculta e permitir reconexão; o estado no navegador permanece restrito ao modo local até esse marco.

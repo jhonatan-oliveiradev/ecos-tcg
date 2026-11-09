@@ -59,3 +59,27 @@ test("starts tutorial duel, keeps hand, and exits cleanly", async ({
     page.getByRole("heading", { name: "O futuro tem raízes." }),
   ).toBeVisible();
 });
+
+test("hydrates the Next.js page and loads the character study", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+  await page.goto("/");
+  await expect(page).toHaveTitle("Ecos — Fábula Neon");
+  await expect(page.locator("html")).toHaveAttribute("lang", "pt-BR");
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+    "content",
+    /Crie vínculos/,
+  );
+  await page.getByRole("button", { name: "ATELIÊ", exact: true }).click();
+  const study = page.getByRole("img", { name: /Estudo de Brotoco/ });
+  await expect(study).toBeVisible();
+  await expect
+    .poll(() => study.evaluate((img: HTMLImageElement) => img.naturalWidth))
+    .toBeGreaterThan(0);
+  expect(errors).toEqual([]);
+});

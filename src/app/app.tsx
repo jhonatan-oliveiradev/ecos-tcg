@@ -1,4 +1,7 @@
+"use client";
+
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useDialogFocus } from "../ui/use-dialog-focus";
 import {
   ArrowUpRight,
@@ -335,7 +338,9 @@ export default function App() {
                 Silhueta assimétrica, formas simples e quatro cores principais.
                 Estudo para avaliação; ainda não é arte final.
               </p>
-              <img
+              <Image
+                width={1536}
+                height={1024}
                 src="/art/brotoco-model-v2.png"
                 alt="Estudo de Brotoco: criatura de terracota com braços grandes, máscara escura e folha assimétrica, em diferentes vistas"
               />

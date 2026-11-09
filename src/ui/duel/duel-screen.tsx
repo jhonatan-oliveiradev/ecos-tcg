@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   ArrowLeft,
   BookOpen,
@@ -42,16 +42,15 @@ export function DuelScreen({
   onGuide: () => void;
   tutorial?: boolean;
 }) {
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selectedId, setSelected] = useState<string | null>(null);
   const [inspect, setInspect] = useState<string | null>(null);
   const [inspectOwner, setInspectOwner] = useState<PlayerId | null>(null);
   const [holo, setHolo] = useState(false);
   const [history, setHistory] = useState(false);
   const [swaps, setSwaps] = useState<string[]>([]);
-  useEffect(() => {
-    if (selected && !v.self.hand.some((c) => c.id === selected))
-      setSelected(null);
-  }, [v.revision, selected, v.self.hand]);
+  const selected = v.self.hand.some((c) => c.id === selectedId)
+    ? selectedId
+    : null;
   const comp = COMPANIONS[v.self.companion.defId],
     opp = COMPANIONS[v.opponent.companion.defId];
   const myTurn = v.priority === v.playerId;
